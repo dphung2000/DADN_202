@@ -20,12 +20,16 @@
      See README(https://goo.gl/l4GJaQ) for more. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_notifications_black_24dp" />
+            android:resource="@drawable/ic_stat_name" />
         <!-- Set color used with incoming notification messages. This is used when no color is set for the incoming
              notification message. See README(https://goo.gl/6BKBk7) for more. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/light_orange" />
+        <activity android:name=".DevicereportActivity"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar">
+        </activity>
 
         <activity
             android:name=".SignUpActivity"
@@ -44,10 +48,8 @@
             android:name=".SetTurnOnOffTimeActivity"
             android:parentActivityName=".ViewDeviceActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
-        <activity android:name=".DevicereportActivity"/>
-        <activity android:name=".ReportActivity" />
-        <activity
-            android:name=".ViewDeviceActivity"
+
+        <activity android:name=".ViewDeviceActivity"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity
@@ -87,4 +89,5 @@
             android:exported="true">
         </receiver>
     </application>
+
 </manifest>

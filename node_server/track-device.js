@@ -18,13 +18,15 @@ var lightStatusRef = admin.database().ref(`Room/${defaultLight.room}/${defaultLi
 lightStatusRef.on('value', (snapshot) => {
   const data = snapshot.val();
   defaultLight.status = data.Status
-  defaultLight.lowLimit = data.Limit
+  defaultLight.lowLimit = data.TurnOffValue
+  defaultLight.highLimit = data.TurnOnValue
 });
 
 var doorStatusRef = admin.database().ref(`Room/${defaultDoor.room}/${defaultDoor.name}`);
 doorStatusRef.on('value', (snapshot) => {
   const data = snapshot.val();
   defaultDoor.status = data.Status
+  console.log(defaultDoor.status)
 });
 
 module.exports = {

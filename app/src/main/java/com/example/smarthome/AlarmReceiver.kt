@@ -1,47 +1,57 @@
 package com.example.smarthome
 
-import android.app.Notification
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.util.Log
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat.getSystemService
-import org.json.JSONObject
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 
 
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         // Is triggered when alarm goes off, i.e. receiving a system broadcast
-        var device = intent?.getSerializableExtra("device") as Device
+        val bundle = intent?.getBundleExtra("extra")
+        val device = bundle?.getSerializable("device") as Device
+        val database = Firebase.database.reference.child("Room").child(device.room).child(device.name)
+        var deviceScheduleMode : Int = 0
+        database.child("ScheduleMode").get().addOnSuccessListener {
+            deviceScheduleMode =  it.value.toString().toInt()
+        }
 
         //make message
-//        var utility = context?.let { Utility(it) }
-//        utility?.turnOnOffDevice(device)
-//        if (intent?.action == "TURN_ON_ACTION") {
-//            device.status = true
-//            Toast.makeText(context, "", Toast.LENGTH_SHORT).show()
-//        }
-//        else if (intent?.action == "TURN_OFF_ACTION"){
-//            device.status = false
-//        }
+        val utility = context?.let { Utility(it) }
+        if (intent.action == "TURN_ON_DEVICE" && !device.status) {
+            utility?.turnOnOffDevice(device)
+            deviceScheduleMode = deviceScheduleMode and SetTurnOnOffTimeActivity.ScheduleMode.TURN_OFF_DEVICE.ordinal
+        }
+        else if (intent.action == "TURN_OFF_DEVICE" && device.status){
+            utility?.turnOnOffDevice(device)
+            deviceScheduleMode = deviceScheduleMode and SetTurnOnOffTimeActivity.ScheduleMode.TURN_ON_DEVICE.ordinal
+        }
 
-        val i = Intent(context, MainActivity::class.java).apply {
+        database.child("ScheduleMode").setValue(deviceScheduleMode)
+
+        val i = Intent(context, ViewDeviceActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
+
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        Log.d("ALARM RECIEVER", device.room)
+        i.putExtra("device", device)
         Log.d("ALARM", intent.action.toString())
-        val pendingIntent = PendingIntent.getActivity(context!!, 0, i, 0)
+        val pendingIntent = PendingIntent.getActivity(context!!, 0, i, PendingIntent.FLAG_ONE_SHOT)
 
         val builder = NotificationCompat.Builder(context!!, "turnonoffnoti")
-            .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+            .setSmallIcon(R.drawable.ic_stat_name)
+            .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.ic_stat_name))
             .setContentTitle("Smart Home App")
-            .setContentText("Device has turned On")
+            .setContentText("${device.name} has turned ${if (intent.action == "TURN_ON_DEVICE") "On" else "Off"}")
             .setAutoCancel(true)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -49,16 +59,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val notificationManager = NotificationManagerCompat.from(context)
         notificationManager.notify(123, builder.build())
-    }
-
-
-    private fun makeMessage(device: Device, data: String): JSONObject {
-        val message = JSONObject()
-        message.put("id", "11")
-        message.put("name", "RELAY")
-        message.put("data", data)
-        message.put("unit", "")
-        return message
     }
 
 }

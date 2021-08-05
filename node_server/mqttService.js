@@ -1,10 +1,10 @@
 const { json } = require('express')
 const mqtt = require('mqtt')
 
-const uname = "CSE_BBC"
-const uname1 = "CSE_BBC1"
-// const uname = "ghuyng"
-// const uname1 = "ghuyng"
+// const uname = "CSE_BBC"
+// const uname1 = "CSE_BBC1"
+const uname = "ghuyng"
+const uname1 = "ghuyng"
 const clientBBC = mqtt.connect('mqtts://io.adafruit.com:8883',{
   username: uname,
   password: "",
@@ -84,7 +84,7 @@ clientBBC1.on('connect', ()=>{
 
 clientBBC1.on('message', (topic, message) =>{
   console.log(`topic : ${topic}, message : ${message}`)
-  if (topic == lightSensorTopic){
+  if (topic == lightSensorTopic && defaultLight.lowLimit != -1 && defaultLight.highLimit != -1){
     const jsonObj = JSON.parse(message)
     if (jsonObj["data"] < defaultLight.lowLimit && !defaultLight.status
       || jsonObj["data"] > defaultLight.highLimit && defaultLight.status){
@@ -98,7 +98,6 @@ clientBBC1.on('message', (topic, message) =>{
 })
 
 function changeRelay(message){
-  if (message.type != 'Door'){
     clientBBC1
       .publish(relayTopic, JSON.stringify({
         "id":"11",
@@ -108,26 +107,30 @@ function changeRelay(message){
       }), err => {
         if (err) {
           //Handle error
-
-          return
+          return false
         }
       })
-  }
     const dbRef = database.ref(`Room/${message.room}/${message.device}`)
     dbRef.child('Status').set(message.data)
     dbRef.child(`${message.data? "On": "Off"}`).get().then((snapshot) => {
       if (snapshot.exists()) {
         var timeList = snapshot.val()
         var currentTime = new Date()
-        timeList.push(`${currentTime.getFullYear()}-${currentTime.getMonth() + 1}-${currentTime.getDate()} ${currentTime.getHours()}:${currentTime.getMinutes()}:${currentTime.getSeconds()}`)
+        const yyyy = currentTime.getFullYear()
+        const mm = String(currentTime.getMonth() + 1).padStart(2, '0')
+        const dd = String(currentTime.getDate()).padStart(2, '0')
+        timeList.push(`${yyyy}-${mm}-${dd} ${currentTime.toLocaleTimeString('en-GB')}`)
         dbRef.child(`${message.data? "On": "Off"}`).set(timeList)
         console.log(timeList);
       } else {
         console.log("No data available");
+        return false
       }
     }).catch((error) => {
       console.error(error);
+      return false
     });
+    return true
 }
 
 function changeAlert(val) {
@@ -137,7 +140,10 @@ function changeAlert(val) {
       "data": val.toString(),
       "unit":""
     }
-    clientBBC.publish(buzzerTopic, JSON.stringify(jsonObj))
+    clientBBC.publish(buzzerTopic, JSON.stringify(jsonObj), err => {
+      if (err) return false
+    })
+    return true
 }
 
 module.exports = {

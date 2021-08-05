@@ -1,15 +1,17 @@
 package com.example.smarthome.ui.notifications
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Button
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.example.smarthome.R
+import com.example.smarthome.DevicereportActivity
+import com.example.smarthome.MainActivity
 import com.example.smarthome.databinding.FragmentNotificationsBinding
+import kotlinx.coroutines.newFixedThreadPoolContext
 
 class NotificationsFragment : Fragment() {
 
@@ -30,11 +32,43 @@ class NotificationsFragment : Fragment() {
 
         _binding = FragmentNotificationsBinding.inflate(inflater, container, false)
         val root: View = binding.root
+        val btnFans: Button= binding.ButtonFans
+        val btnLights: Button = binding.ButtonLights
+        val btnTV: Button = binding.ButtonTV
+        val btnAC: Button = binding.ButtonAC
 
-        val textView: TextView = binding.textNotifications
-        notificationsViewModel.text.observe(viewLifecycleOwner, Observer {
-            textView.text = it
-        })
+
+        btnFans.setOnClickListener {
+            activity?.let{
+                val intent = Intent (it, DevicereportActivity::class.java)
+                intent.putExtra("value","Fan")
+                it.startActivity(intent)
+            }
+        }
+
+        btnTV.setOnClickListener {
+            activity?.let{
+                val intent = Intent (it, DevicereportActivity::class.java)
+                intent.putExtra("value","Television")
+                it.startActivity(intent)
+            }
+        }
+
+        btnAC.setOnClickListener {
+            activity?.let{
+                val intent = Intent (it, DevicereportActivity::class.java)
+                intent.putExtra("value","Air-Conditioners")
+                it.startActivity(intent)
+            }
+        }
+
+        btnLights.setOnClickListener {
+            activity?.let{
+                val intent = Intent (it, DevicereportActivity::class.java)
+                intent.putExtra("value","Light")
+                it.startActivity(intent)
+            }
+        }
         return root
     }
 
@@ -43,3 +77,5 @@ class NotificationsFragment : Fragment() {
         _binding = null
     }
 }
+
+
